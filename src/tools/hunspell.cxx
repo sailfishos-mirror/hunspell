@@ -686,17 +686,21 @@ void pipe_interface(Hunspell** pMS, int format, FILE* fileid, char* filename) {
       perror(gettext("Can't create tmp dir"));
       exit(1);
     }
+    if (!secure_filename(filename)) {
+      fprintf(stderr, gettext("Can't open %s.\n"), filename);
+      if (system((std::string("rmdir ") + odftmpdir).c_str()) != 0) {
+        perror("temp dir delete failed");
+      }
+      exit(1);
+    }
     // break 1-line XML of zipped ODT documents at </style:style> and </text:p>
     // to avoid tokenization problems (fgets could stop within an XML tag)
     std::ostringstream sbuf;
     sbuf << "unzip -p \"" << filename << "\" content.xml | sed "
             "\"s/\\(<\\/text:p>\\|<\\/style:style>\\)\\(.\\)/\\1\\n\\2/g;s/<\\/\\?text:span[^>]*>//g\" "
             ">" << odftmpdir << "/content.xml";
-    if (!secure_filename(filename) || system(sbuf.str().c_str()) != 0) {
-      if (secure_filename(filename))
-        perror(gettext("Can't open inputfile"));
-      else
-        fprintf(stderr, gettext("Can't open %s.\n"), filename);
+    if (system(sbuf.str().c_str()) != 0) {
+      perror(gettext("Can't open inputfile"));
       if (system((std::string("rmdir ") + odftmpdir).c_str()) != 0) {
         perror("temp dir delete failed");
       }
@@ -1601,17 +1605,20 @@ void interactive_interface(Hunspell** pMS, char* filename, int format) {
       exit(1);
     }
     fclose(text);
+    if (!secure_filename(filename)) {
+      fprintf(stderr, gettext("Can't open %s.\n"), filename);
+      endwin();
+      (void)system((std::string("rmdir ") + odftmpdir).c_str());
+      exit(1);
+    }
     // break 1-line XML of zipped ODT documents at </style:style> and </text:p>
     // to avoid tokenization problems (fgets could stop within an XML tag)
     std::ostringstream sbuf;
     sbuf << "unzip -p \"" << filename << "\" content.xml | sed "
             "\"s/\\(<\\/text:p>\\|<\\/style:style>\\)\\(.\\)/\\1\\n\\2/g\" "
             ">" << odftmpdir << "/content.xml";
-    if (!secure_filename(filename) || system(sbuf.str().c_str()) != 0) {
-      if (secure_filename(filename))
-        perror(gettext("Can't open inputfile"));
-      else
-        fprintf(stderr, gettext("Can't open %s.\n"), filename);
+    if (system(sbuf.str().c_str()) != 0) {
+      perror(gettext("Can't open inputfile"));
       endwin();
       (void)system((std::string("rmdir ") + odftmpdir).c_str());
       exit(1);
