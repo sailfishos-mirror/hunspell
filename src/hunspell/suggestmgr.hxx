@@ -110,6 +110,7 @@ class SuggestMgr {
   int maxngramsugs;
   int maxcpdsugs;
   int complexprefixes;
+  std::chrono::steady_clock::time_point suggest_start;
 
  public:
   SuggestMgr(const std::string& tryme, unsigned int maxn, AffixMgr* aptr);

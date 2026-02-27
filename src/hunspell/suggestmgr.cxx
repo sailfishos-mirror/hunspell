@@ -206,6 +206,8 @@ bool SuggestMgr::suggest(std::vector<std::string>& slst,
 
   const std::string& word = complexprefixes ? w2 : w;
 
+  suggest_start = std::chrono::steady_clock::now();
+
   if (utf8) {
     int wl = u8_u16(word_utf, word);
     if (wl == -1) {
@@ -1720,6 +1722,10 @@ int SuggestMgr::checkword(const std::string& word,
                           int cpdsuggest,
                           int* timer,
                           clock_t* timelimit) {
+  // check overall suggestion time limit
+  if (std::chrono::steady_clock::now() - suggest_start > TIMELIMIT_SUGGESTION_MS)
+    return 0;
+
   // check time limit
   if (timer) {
     (*timer)--;
